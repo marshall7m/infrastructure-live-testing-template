@@ -2,7 +2,6 @@ variable "dependency" {
     type = string
 }
 
-output "bar" {
+output "random_value" {
   value = var.dependency
 }
-
