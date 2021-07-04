@@ -1,5 +1,5 @@
 locals {
-  account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl"))
+  account_vars = read_terragrunt_config(find_in_parent_folders("account.hcl", "null.hcl"), { locals = { account_name = basename(get_terragrunt_dir()) } })
   region_vars  = read_terragrunt_config(find_in_parent_folders("region.hcl", "null.hcl"), { locals = { region = "us-west-2" } })
 
   account_name = local.account_vars.locals.account_name

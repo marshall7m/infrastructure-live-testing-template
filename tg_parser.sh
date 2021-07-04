@@ -18,10 +18,9 @@ log() {
     echo "${log_priority} : ${log_message}"
 }
 
-
-parent="./"
+ACCOUNT_PARENT_PATHS=(${ACCOUNT_PARENT_PATHS//,/ })
 # returns the exitcode instead of the plan output (0=no plan difference, 1=error, 2=detected plan difference)
-tg_plan_cmd="terragrunt run-all plan --terragrunt-working-dir $parent --terragrunt-non-interactive -detailed-exitcode"
+tg_plan_cmd="terragrunt run-all plan --terragrunt-working-dir $TERRAGRUNT_WORKING_DIR --terragrunt-non-interactive -detailed-exitcode"
 
 tg_plan_out=$(eval "$tg_plan_cmd 2>&1")
 
@@ -72,9 +71,9 @@ for i in $(seq 0 $(( ${#modules[@]} - 1 ))); do
         # for every directory addded to parsed_stack, only add the git root directory's relative path to the directory
         # Reason is for path portability (absolute paths will differ between instances)
         if [ "${deps[i]}" == "[]" ]; then
-            parsed_stack[$(realpath --relative-to="$git_root" "${modules[i]}")]+=""
+            parsed_stack[$(realpath -e --relative-to="$git_root" "${modules[i]}")]+=""
         else 
-            parsed_stack[$(realpath --relative-to="$git_root" "${modules[i]}")]+=$(realpath --relative-to="$git_root" $( echo "${deps[i]}" | sed 's/[][]//g' ))            
+            parsed_stack[$(realpath -e --relative-to="$git_root" "${modules[i]}")]+=$(realpath -e --relative-to="$git_root" $( echo "${deps[i]}" | sed 's/[][]//g' ))            
         fi
     fi
 done
@@ -108,12 +107,30 @@ for i in ${!run_order[@]}; do
     log "run_order[$i] = ${run_order[$i]}" "DEBUG"
 done
 
+log "Creating Step Function Input" "INFO"
+sf_input=$(jq -n '{}')
 
-sf_input=()
-for key in "${!run_order[@]}"; do
-    # convert to nested list for step function map to iterate over and adds `key` terragrunt directory to the end of the run order
-    sf_input+=("[${run_order[$key]} $key]")
+for parent_dir in "${ACCOUNT_PARENT_PATHS[@]}"; do
+    for key in "${!run_order[@]}"; do
+        log "Run Order Key: ${key}" "DEBUG"
+        log "Parent Directory: ${parent_dir}" "DEBUG"
+        rel_path=$(realpath -e --relative-to=$key $parent_dir 2>&1 >/dev/null)
+        exitcode=$?
+        if [ $exitcode -ne 1 ]; then
+            # adds `key` terragrunt directory to the end of the run order
+            order="${run_order[$key]} $key"
+            log "Appending the following run order:" "DEBUG"
+            log "${order}" "DEBUG"
+            sf_input=$( echo $sf_input | jq --arg order "$order" --arg parent_dir "$parent_dir" '.[$parent_dir].RunOrder += [$order | split(" ")]' )
+        else
+            log "Terragrunt dir: ${key} is not a child dir of: ${parent_dir}" "DEBUG"
+            log "Error:" "DEBUG"
+            log "$rel_path" "DEBUG"
+        fi
+    done
 done
 
 log "Step Function Input:" "INFO"
-log "${sf_input[*]}" "INFO"
+log "${sf_input}" "INFO"
+
+aws stepfunctions start-execution --state-machine-arn $STEP_MACHINE_ARN --input "${sf_input}"
