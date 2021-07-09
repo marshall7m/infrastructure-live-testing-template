@@ -4,9 +4,6 @@ locals {
 
   account_name = local.account_vars.locals.account_name
   region       = local.region_vars.locals.region
-
-  tf_state_bucket_name = "${local.account_name}-${local.region}-tf-state"
-  tf_state_locking_db_table_name = "tf-state-locks"
   
   provider_switches = merge(
     read_terragrunt_config(find_in_parent_folders("provider_switches.hcl", "null.hcl"), {}),
@@ -52,26 +49,7 @@ terraform {
   }
 }
 
-remote_state {
-  backend = "s3"
-  config = {
-    bucket         = local.tf_state_bucket_name
-    key            = "${path_relative_to_include()}/terraform.tfstate"
-    dynamodb_table = local.tf_state_locking_db_table_name
-    encrypt        = true
-    region         = local.region
-  }
-  generate = {
-    path      = "backend.tf"
-    if_exists = "skip"
-  }
-}
-
 inputs = merge(
   local.account_vars.locals, 
-  local.region_vars.locals, 
-  {
-    tf_state_bucket_name = local.tf_state_bucket_name
-    tf_state_locking_db_table_name = local.tf_state_locking_db_table_name
-  }
+  local.region_vars.locals
 )
