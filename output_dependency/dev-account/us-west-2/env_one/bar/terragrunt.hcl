@@ -10,6 +10,11 @@ dependency "baz" {
     config_path = "${get_terragrunt_dir()}/../baz"
 }
 
+dependency "global" {
+    config_path = "${get_terragrunt_dir()}/../../global"
+}
+
 inputs = {
-    dependency = dependency.baz.outputs.random_value
+    bar = dependency.baz.outputs.baz
+    global = dependency.global.outputs.global
 }

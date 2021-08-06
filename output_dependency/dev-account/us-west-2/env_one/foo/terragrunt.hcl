@@ -11,5 +11,5 @@ dependency "bar" {
 }
 
 inputs = {
-    dependency = dependency.bar.outputs.random_value
+    dependency = dependency.bar.outputs.bar
 }

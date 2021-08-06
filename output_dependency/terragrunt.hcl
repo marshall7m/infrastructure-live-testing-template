@@ -9,21 +9,6 @@ locals {
     read_terragrunt_config(find_in_parent_folders("provider_switches.hcl", "null.hcl"), {}),
     read_terragrunt_config("provider_switches.hcl", {})
   )
-
-  before_hook = <<-EOF
-  if [[ -z $SKIP_TFENV ]]; then \
-    count=`ls -1 "*.tf" 2>/dev/null | wc -l`
-    if [ $count != 0 ]; then \
-      echo Found Terraform files
-      echo Scanning Terraform files for Terraform binary version constraint
-      tfenv use min-required || tfenv install min-required \
-      && tfenv use min-required
-    fi
-  else
-    echo Skip scanning Terraform files for Terraform binary version constraint
-    echo "Terraform Version: $(tfenv version-name)";
-  fi
-  EOF
 }
 
 generate "provider" {

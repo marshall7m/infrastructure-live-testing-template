@@ -5,3 +5,11 @@ include {
 terraform {
     source = "${get_terragrunt_dir()}///"
 }
+
+dependencies {
+  paths = ["../../global"]
+}
+
+inputs = {
+    is_mod = get_env("IS_MOD", false)
+}
