@@ -7,9 +7,5 @@ terraform {
 }
 
 dependencies {
-  paths = ["../baz", "../../global"]
-}
-
-inputs = {
-    is_mod = get_env("IS_MOD", false)
+  paths = ["../baz", "../../../global"]
 }

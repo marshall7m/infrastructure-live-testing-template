@@ -9,7 +9,3 @@ terraform {
 dependencies {
   paths = ["../bar"]
 }
-
-inputs = {
-    is_mod = get_env("IS_MOD", false)
-}

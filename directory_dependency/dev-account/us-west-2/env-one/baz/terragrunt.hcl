@@ -7,9 +7,5 @@ terraform {
 }
 
 dependencies {
-  paths = ["../../global"]
-}
-
-inputs = {
-    is_mod = get_env("IS_MOD", false)
+  paths = ["../../../global"]
 }
