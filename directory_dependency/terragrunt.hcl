@@ -14,6 +14,7 @@ locals {
       bucket = get_env("TG_S3_BUCKET", "testing-infrastructure-live")
       key    = local.path
       region = local.region
+      encrypt = true
     }
   }
 }
