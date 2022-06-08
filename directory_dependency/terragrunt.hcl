@@ -15,6 +15,7 @@ locals {
       key    = local.path
       region = local.region
       encrypt = true
+      disable_bucket_update = false
     }
   }
 }
