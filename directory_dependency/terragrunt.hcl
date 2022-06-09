@@ -15,6 +15,7 @@ locals {
       key    = local.path
       region = local.region
       encrypt = true
+      # needed to prevent err within terragrunt plan/apply cmds: json: cannot unmarshal array into Go struct field Statement.Statement.Action of type string
       disable_bucket_update = false
     }
   }
